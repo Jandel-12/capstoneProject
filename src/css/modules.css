@@ -1,0 +1,171 @@
+/* src/css/modules.css - Module Card Styles */
+
+/* Module Card Container */
+.module-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover Effect for Active Cards */
+.module-card:hover:not(.locked) {
+  border-color: #475569;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Locked State */
+.module-card.locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.module-card.locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Module Header */
+.module-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Module Icon */
+.module-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.module-icon.orange {
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+}
+
+.module-icon.blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+}
+
+.module-icon.purple {
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+}
+
+.module-icon.yellow {
+  background: linear-gradient(135deg, #eab308 0%, #fbbf24 100%);
+}
+
+/* Module Info */
+.module-info {
+  flex: 1;
+}
+
+.module-info h3 {
+  font-size: 1.25rem;
+  color: white;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.module-info p {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Module Progress */
+.module-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #22c55e;
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  font-weight: 500;
+}
+
+.module-progress::before {
+  content: '⭐';
+  font-size: 1rem;
+}
+
+/* Locked Badge */
+.locked-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fbbf24;
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  font-weight: 500;
+}
+
+/* Decorative Element on Hover */
+.module-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #f97316, transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.module-card:hover:not(.locked)::before {
+  opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .module-card {
+    padding: 1.25rem;
+  }
+
+  .module-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+  }
+
+  .module-info h3 {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .module-card {
+    padding: 1rem;
+  }
+
+  .module-header {
+    gap: 0.75rem;
+  }
+
+  .module-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
+  }
+
+  .module-info h3 {
+    font-size: 1rem;
+  }
+
+  .module-info p {
+    font-size: 0.8125rem;
+  }
+}

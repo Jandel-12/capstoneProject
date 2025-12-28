@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Royale Learning Platform</title>
+  <!-- Webpack will inject CSS and JS automatically -->
+</head>
+<body>
+  <!-- Home View -->
+  <div id="homeView" class="home-view">
+    <div class="header">
+      <h1>El Royale <span class="highlight">Learning Platform</span></h1>
+      <p>Front-end development through interactive challenges</p>
+    </div>
+    <div class="modules-grid" id="modulesGrid"></div>
+    <div class="dev-info" id="devInfo"></div>
+  </div>
+
+  <!-- Challenge View -->
+  <div id="challengeView" class="challenge-view">
+    <div class="challenge-header">
+      <div class="challenge-header-content">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="back-btn" id="backBtn">← Back</button>
+          <div class="challenge-title">
+            <h2 id="challengeTitle">Challenge Title</h2>
+            <p id="challengeProgress">Challenge 1 of 5</p>
+          </div>
+        </div>
+        <span class="difficulty-badge" id="difficultyBadge">easy</span>
+      </div>
+    </div>
+
+    <div class="challenge-main">
+      <div class="left-panel">
+        <div class="instructions">
+          <h3>📝 Challenge Instructions</h3>
+          <p id="challengeInstructions"></p>
+          <div id="hintBox" class="hint-box hidden">
+            <p><strong>💡 Hint:</strong> <span id="hintText"></span></p>
+          </div>
+        </div>
+
+        <div class="editor-container">
+          <div class="editor-tab">index.html</div>
+          <textarea id="codeEditor" class="code-editor" spellcheck="false"></textarea>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn-reset" id="resetBtn">↻ Reset</button>
+          <button class="btn-hint" id="hintBtn">💡 Hint</button>
+          <button class="btn-check" id="checkBtn">✓ Check Solution</button>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="preview-container">
+          <div class="preview-tab">Live Preview</div>
+          <iframe id="previewFrame" class="preview-frame"></iframe>
+        </div>
+
+        <div id="validationResult" class="validation-result hidden">
+          <div class="result-header">
+            <span id="resultIcon"></span>
+            <span id="resultMessage"></span>
+          </div>
+          <ul id="errorList" class="error-list"></ul>
+          <button id="nextBtn" class="btn-next hidden">Next Challenge →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
