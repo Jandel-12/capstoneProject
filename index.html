@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Royale Learning Platform</title>
+  <!-- Webpack will inject CSS and JS automatically -->
+<script defer src="js/bundle.js"></script></head>
+<body>
+  <!-- Home View -->
+  <div id="homeView" class="home-view">
+    <div class="header">
+      <h1>El Royale <span class="highlight">Learning Platform</span></h1>
+      <p>Front-end development through interactive challenges</p>
+    </div>
+    <div class="modules-grid" id="modulesGrid"></div>
+      <div class="dev-grid" id="devInfo">
+    <div class="dev-card">
+      <div class="avatar">
+        
+        <img src="https://scontent.fpag2-1.fna.fbcdn.net/v/t39.30808-6/429825557_7612196208799434_302022523962705928_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGWXJEa5AeZnfUI3bqRh0_Sb11EJk1ten9vXUQmTW16f2Q_ukWGUD3EjbwJSyPxEgw32K0fJfxAR1tAylMvkgVa&_nc_ohc=XtNjy8PcBZEQ7kNvwEabtwF&_nc_oc=AdkIc4uceN1HDhw57NEZnfFSGVKWmxe_Qdn9PAKavhcFfLGiDqg7keNoxsGBmiP-vZI&_nc_zt=23&_nc_ht=scontent.fpag2-1.fna&_nc_gid=NJY9wvigE02BNpURXgmkpg&oh=00_AfnDvm7oqYC18gKWxqbbEb-6jdP6MuP0bsfHUXkUMiQn9g&oe=69590B64" alt="Developer 1" />
+      </div>
+      <div class="name">Noelgie Gaela</div>
+      <div class="bio">Frontend engineer. Loves UI/UX and animations.</div>
+    </div>
+    <!-- dev-info -->
+    <div class="dev-card">
+      <div class="avatar">
+        <img src="https://scontent.fpag2-1.fna.fbcdn.net/v/t39.30808-6/484141334_3861368224174812_6092916999830926896_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=a5f93a&_nc_eui2=AeGzGzp8cze28EkXGG5mLsRBMhz2VYM7HV4yHPZVgzsdXrIy__-vydlpYbQcU2YmshKMvTA7m4W8hXlfa62QTZ8E&_nc_ohc=7-thXvAcvlwQ7kNvwHg8bBi&_nc_oc=AdkE25cwDmPlgtwZ7giUt5uri38v4YTkk2ONyDP-ZpKyd2x9aztKg4IIUI2iuXO2K4w&_nc_zt=23&_nc_ht=scontent.fpag2-1.fna&_nc_gid=01k9UnFMrO8Y_qMj-G0-9w&oh=00_Afn_JiBMI5Be_fadFgJupxFUlyQJd8U2cZyizdVVb0fEfA&oe=69592E99" alt="Developer 2" />
+      </div>
+      <div class="name">Mark Jandel Inson</div>
+      <div class="bio">Lead Developer and Backend specialist. API design and databases.</div>
+    </div>
+
+    <div class="dev-card">
+      <div class="avatar">
+        <img src="https://via.placeholder.com/300?text=Dev+3" alt="Developer 3" />
+      </div>
+      <div class="name">Jobert Anglebert Felismino</div>
+      <div class="bio">QA tester a bug hunter specialist.</div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Challenge View -->
+  <div id="challengeView" class="challenge-view">
+    <div class="challenge-header">
+      <div class="challenge-header-content">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="back-btn" id="backBtn">← Back</button>
+          <div class="challenge-title">
+            <h2 id="challengeTitle">Challenge Title</h2>
+            <p id="challengeProgress">Challenge 1 of 5</p>
+          </div>
+        </div>
+        <span class="difficulty-badge" id="difficultyBadge">easy</span>
+      </div>
+    </div>
+
+    <div class="challenge-main">
+      <div class="left-panel">
+        <p id="hideBtn" class="hide-btn">hide</p>
+        <div class="instructions">
+          
+          <h3>📝 Challenge Instructions</h3>
+          <p id="challengeInstructions"></p>
+          <div id="hintBox" class="hint-box hidden">
+            <p><strong>💡 Hint:</strong> <span id="hintText"></span></p>
+          </div>
+        </div>
+
+        <div class="editor-container">
+          <div class="editor-tab">index.html</div>
+          <textarea id="codeEditor" class="code-editor" spellcheck="false"></textarea>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn-reset" id="resetBtn">↻ Reset</button>
+          <button class="btn-hint" id="hintBtn">💡 Hint</button>
+          <button class="btn-check" id="checkBtn">✓ Check Solution</button>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="preview-container">
+          <div class="preview-tab">Live Preview</div>
+          <iframe id="previewFrame" class="preview-frame"></iframe>
+        </div>
+
+        <div id="validationResult" class="validation-result hidden">
+          <div class="result-header">
+            <span id="resultIcon"></span>
+            <span id="resultMessage"></span>
+          </div>
+          <ul id="errorList" class="error-list"></ul>
+          <button id="nextBtn" class="btn-next hidden">Next Challenge →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Challenge List View -->
+<div id="challengeListView" class="challenge-list-view hidden">
+  <div class="challenge-list-header">
+    <button class="back-to-modules-btn" id="backToModulesBtn">
+      ← Back to Modules
+    </button>
+    <h1 id="moduleTitle" class="module-title-header"></h1>
+    <p class="module-subtitle">Select a challenge to practice</p>
+  </div>
+
+  <div class="challenge-list-container" id="challengeListContainer">
+    <!-- Challenge cards rendered by JavaScript -->
+  </div>
+</div>
+</body>
+</html>
