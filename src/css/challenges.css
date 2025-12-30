@@ -111,6 +111,18 @@
   background: #1e293b;
 }
 
+.hide-btn{
+  background: #1e293b;
+  padding: 1rem;
+  border-bottom: 1px solid #334155;
+  position: absolute;
+  right: 50%;
+  border-radius: 2rem;
+}
+
+.hide-btn:hover{
+  background-color: #334155;
+}
 /* Instructions Section */
 .instructions {
   background: #1e293b;

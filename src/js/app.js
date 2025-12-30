@@ -1,7 +1,10 @@
+// src/js/app.js - Main Entry Point
+
 // Import CSS files
 import '../css/main.css';
 import '../css/modules.css';
 import '../css/challenges.css';
+import '../css/challenge-list.css';
 
 // Import data
 import { CHALLENGES, MODULES } from '../data/challenges.js';
@@ -11,7 +14,7 @@ import { ChallengeEngine } from './core/ChallengeEngine.js';
 import { PreviewManager } from './core/PreviewManager.js';
 
 // Import utilities
-import { getElement, getElements, addClass, removeClass, toggleClass, debounce } from './utils/dom.js';
+import dom, { getElement, getElements, addClass, removeClass, hide, toggleClass } from './utils/dom.js';
 import { Storage } from './utils/storage.js';
 
 // ===== APPLICATION STATE =====
@@ -23,6 +26,7 @@ class AppState {
     this.hintLevel = 0;
     this.completedChallenges = Storage.get('completedChallenges') || [];
     this.userCode = '';
+    this.showingChallengeList = false; // New: track if showing challenge list
   }
 
   setView(view) {
@@ -31,11 +35,13 @@ class AppState {
 
   setModule(moduleId) {
     this.selectedModule = moduleId;
+    this.showingChallengeList = true; // Show challenge list when module selected
   }
 
   setChallenge(index) {
     this.currentChallengeIndex = index;
     this.hintLevel = 0;
+    this.showingChallengeList = false; // Hide challenge list when challenge selected
   }
 
   incrementHint() {
@@ -70,21 +76,29 @@ class UIController {
     this.elements = {
       // Views
       homeView: getElement('homeView'),
+      challengeListView: getElement('challengeListView'), 
       challengeView: getElement('challengeView'),
       
       // Home View
       modulesGrid: getElement('modulesGrid'),
+      
+      // Challenge List View
+      challengeListContainer: getElement('challengeListContainer'),
+      moduleTitle: getElement('moduleTitle'),
+      backToModulesBtn: getElement('backToModulesBtn'),
       
       // Challenge View - Header
       backBtn: getElement('backBtn'),
       challengeTitle: getElement('challengeTitle'),
       challengeProgress: getElement('challengeProgress'),
       difficultyBadge: getElement('difficultyBadge'),
+
       
       // Challenge View - Instructions
       challengeInstructions: getElement('challengeInstructions'),
       hintBox: getElement('hintBox'),
       hintText: getElement('hintText'),
+      hideChallenge: getElement('hideBtn'),
       
       // Challenge View - Editor
       codeEditor: getElement('codeEditor'),
@@ -106,39 +120,62 @@ class UIController {
     this.bindEvents();
   }
 
- bindEvents() {
-  // Navigation
-  this.elements.backBtn.addEventListener('click', () => this.showHomeView());
-  this.elements.nextBtn.addEventListener('click', () => this.handleNextChallenge());
-  
-  // Challenge actions
-  this.elements.resetBtn.addEventListener('click', () => this.handleReset());
-  this.elements.hintBtn.addEventListener('click', () => this.handleHint());
-  this.elements.checkBtn.addEventListener('click', () => this.handleCheck());
-  
-  // Live preview with debounce - ONLY ONE LISTENER!
-  const debouncedPreview = debounce(() => {
-    this.updatePreview();
-  }, 500);
-  
-  this.elements.codeEditor.addEventListener('input', (e) => {
-    this.state.userCode = e.target.value;
-    debouncedPreview();
-  });
-}
+  bindEvents() {
+    // Navigation
+    this.elements.backBtn.addEventListener('click', () => this.showChallengeListView());
+    this.elements.nextBtn.addEventListener('click', () => this.handleNextChallenge());
+    this.elements.backToModulesBtn.addEventListener('click', () => this.showHomeView());
+    
+    // Challenge actions
+    this.elements.resetBtn.addEventListener('click', () => this.handleReset());
+    this.elements.hintBtn.addEventListener('click', () => this.handleHint());
+    this.elements.checkBtn.addEventListener('click', () => this.handleCheck());
+    this.elements.hideChallenge.addEventListener('click', ()=> this.handleChallengeHide())
+    
+    // Live preview with debounce
+    let previewTimeout;
+    this.elements.codeEditor.addEventListener('input', (e) => {
+      this.state.userCode = e.target.value;
+      
+      // Clear previous timeout
+      clearTimeout(previewTimeout);
+      
+      // Wait 500ms after user stops typing before updating preview
+      previewTimeout = setTimeout(() => {
+        this.updatePreview();
+      }, 500);
+    });
+  }
 
   // ===== VIEW SWITCHING =====
   
   showHomeView() {
     this.state.setView('home');
+    this.state.selectedModule = null;
+    this.state.showingChallengeList = false;
+    
     removeClass(this.elements.homeView, 'hidden');
+    addClass(this.elements.challengeListView, 'hidden');
     removeClass(this.elements.challengeView, 'active');
     this.renderModules();
   }
 
+  showChallengeListView() {
+    this.state.setView('challengeList');
+    this.state.showingChallengeList = true;
+    
+    addClass(this.elements.homeView, 'hidden');
+    removeClass(this.elements.challengeListView, 'hidden');
+    removeClass(this.elements.challengeView, 'active');
+    this.renderChallengeList();
+  }
+
   showChallengeView() {
     this.state.setView('challenge');
+    this.state.showingChallengeList = false;
+    
     addClass(this.elements.homeView, 'hidden');
+    addClass(this.elements.challengeListView, 'hidden');
     addClass(this.elements.challengeView, 'active');
     this.loadChallenge();
   }
@@ -153,7 +190,7 @@ class UIController {
       
       return `
         <div class="module-card ${module.locked ? 'locked' : ''}"
-             onclick="${module.locked ? '' : `app.startModule('${module.id}')`}">
+             onclick="${module.locked ? '' : `app.selectModule('${module.id}')`}">
           <div class="module-header">
             <div class="module-icon ${module.color}">${module.icon}</div>
             <div class="module-info">
@@ -168,6 +205,55 @@ class UIController {
     }).join('');
     
     this.elements.modulesGrid.innerHTML = modulesHTML;
+  }
+
+  // ===== CHALLENGE LIST VIEW =====
+  
+  renderChallengeList() {
+    const module = MODULES.find(m => m.id === this.state.selectedModule);
+    if (!module) return;
+    
+    const challenges = CHALLENGES[this.state.selectedModule];
+    
+    // Update module title
+    this.elements.moduleTitle.innerHTML = `
+      <div class="module-icon ${module.color}" style="display: inline-block; width: 40px; height: 40px; text-align: center; line-height: 40px; border-radius: 8px; margin-right: 12px;">
+        ${module.icon}
+      </div>
+      <span>${module.name}</span>
+    `;
+    
+    // Render challenge cards
+    const challengesHTML = challenges.map((challenge, index) => {
+      const isCompleted = this.state.completedChallenges.includes(challenge.id);
+      const difficultyColor = {
+        'easy': 'green',
+        'medium': 'yellow',
+        'hard': 'red'
+      }[challenge.difficulty];
+      
+      return `
+        <div class="challenge-card ${isCompleted ? 'completed' : ''}"
+             onclick="app.startChallenge(${index})">
+          <div class="challenge-card-header">
+            <div class="challenge-number">${index + 1}</div>
+            <div class="challenge-info">
+              <h3>${challenge.title}</h3>
+              <div class="challenge-meta">
+                <span class="difficulty-tag ${difficultyColor}">${challenge.difficulty}</span>
+                ${isCompleted ? '<span class="completed-tag">✓ Completed</span>' : ''}
+              </div>
+            </div>
+          </div>
+          <div class="challenge-footer">
+            <span class="hint-count">💡 ${challenge.hints.length} hints available</span>
+            ${isCompleted ? '<span class="star-earned">⭐ Star Earned</span>' : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    this.elements.challengeListContainer.innerHTML = challengesHTML;
   }
 
   // ===== CHALLENGE VIEW =====
@@ -202,16 +288,16 @@ class UIController {
     this.updatePreview();
   }
 
-updatePreview() {
-  const challenge = this.state.getCurrentChallenge();
-  const challengeType = challenge ? challenge.type || 'html' : 'html';
-  
-  this.previewManager.update(
-    this.elements.previewFrame,
-    this.state.userCode,
-    challengeType
-  );
-}
+  updatePreview() {
+    const challenge = this.state.getCurrentChallenge();
+    const challengeType = challenge ? challenge.type || 'html' : 'html';
+    
+    this.previewManager.update(
+      this.elements.previewFrame,
+      this.state.userCode,
+      challengeType
+    );
+  }
 
   // ===== CHALLENGE ACTIONS =====
   
@@ -306,8 +392,22 @@ updatePreview() {
       this.showHomeView();
     }
   }
+   handleChallengeHide(){
+    const instructions = this.elements.challengeInstructions
+    const hideTextContent = this.elements.hideChallenge;
+    if(hideTextContent.textContent === "hide"){
+      hideTextContent.textContent = "show"
+    }
+    else
+    {
+      hideTextContent.textContent = "hide"
+    }
+    toggleClass(instructions, 'hidden')
+
+  }
 }
 
+ 
 // ===== APPLICATION CLASS =====
 class Application {
   constructor() {
@@ -326,9 +426,21 @@ class Application {
     const module = MODULES.find(m => m.id === moduleId);
     if (module && !module.locked) {
       this.state.setModule(moduleId);
-      this.state.setChallenge(0);
-      this.ui.showChallengeView();
+      this.ui.showChallengeListView();
     }
+  }
+
+  selectModule(moduleId) {
+    const module = MODULES.find(m => m.id === moduleId);
+    if (module && !module.locked) {
+      this.state.setModule(moduleId);
+      this.ui.showChallengeListView();
+    }
+  }
+
+  startChallenge(index) {
+    this.state.setChallenge(index);
+    this.ui.showChallengeView();
   }
 }
 

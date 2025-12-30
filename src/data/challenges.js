@@ -1,5 +1,3 @@
-// src/data/challenges.js - COMPLETE VERSION WITH ALL MODULES
-
 /**
  * All challenge data for the El Royale platform
  */
@@ -11,67 +9,95 @@ export const CHALLENGES = {
       id: 'html-1',
       title: 'Your First Heading',
       difficulty: 'easy',
-      instructions: 'Create an h1 element with the text "Hello El Royale"',
+      instructions: `Welcome to HTML! Let's start with one of the most important elements: headings. 
+
+In HTML, headings help organize content and show hierarchy. The <h1> tag represents the main heading - think of it as the title of a page. It's the biggest and most important heading.
+
+Your task: Create an <h1> element containing the text "Hello El Royale". Remember, HTML elements need both an opening tag <h1> and a closing tag </h1>, with your content in between.`,
       starterCode: '<!-- Write your HTML here -->\n',
       hints: [
-        'Use the <h1> tag for main headings',
-        'Remember to close your tag with </h1>',
-        'The exact text should be: Hello El Royale'
+        'Headings in HTML use tags from <h1> (largest) to <h6> (smallest). For this challenge, use <h1>.',
+        'HTML elements follow this pattern: <tagname>Your content here</tagname>. Don\'t forget the closing tag!',
+        'The exact text should be: Hello El Royale (check your spelling and capitalization)'
       ],
       validation: [
-        { selector: 'h1', exists: true, errorMsg: 'No <h1> element found' },
-        { selector: 'h1', textContent: 'Hello El Royale', errorMsg: 'h1 text should be "Hello El Royale"' }
+        { selector: 'h1', exists: true, errorMsg: 'No <h1> element found. Make sure you\'re using the h1 tag.' },
+        { selector: 'h1', textContent: 'Hello El Royale', errorMsg: 'The h1 text should be exactly "Hello El Royale"' }
       ]
     },
     {
       id: 'html-2',
       title: 'Adding a Paragraph',
       difficulty: 'easy',
-      instructions: 'Below your h1, add a paragraph (p tag) that says "Welcome to interactive learning"',
+      instructions: `Great job on your first heading! Now let's add some body text using paragraphs.
+
+Paragraphs are used for regular text content on a webpage. The <p> tag tells the browser "this is a paragraph of text." Web pages typically combine headings with paragraphs to create well-structured content.
+
+Your task: Below your h1 heading, add a paragraph that says "Welcome to interactive learning". Notice how different elements work together to build a complete page!`,
       starterCode: '<h1>Hello El Royale</h1>\n<!-- Add your paragraph here -->\n',
       hints: [
-        'Use the <p> tag for paragraphs',
-        'Place it after the h1 element',
-        'The text should be: Welcome to interactive learning'
+        'Use the <p> tag to create paragraphs. It works just like the h1 tag you just learned!',
+        'Make sure your paragraph comes AFTER the h1 tag (below it in your code).',
+        'The paragraph text should be exactly: Welcome to interactive learning'
       ],
       validation: [
-        { selector: 'p', exists: true, errorMsg: 'No <p> element found' },
-        { selector: 'p', textContent: 'Welcome to interactive learning', errorMsg: 'Paragraph text is incorrect' }
+        { selector: 'p', exists: true, errorMsg: 'No <p> element found. Use the p tag for paragraphs.' },
+        { selector: 'p', textContent: 'Welcome to interactive learning', errorMsg: 'Paragraph text should be "Welcome to interactive learning"' }
       ]
     },
     {
       id: 'html-3',
       title: 'Creating a List',
       difficulty: 'medium',
-      instructions: 'Create an unordered list (ul) with three list items: "HTML", "CSS", and "JavaScript"',
+      instructions: `Lists are essential in HTML for organizing related items. There are two types: ordered lists (numbered) and unordered lists (bulleted).
+
+For this challenge, we'll create an unordered list using <ul>. Inside the <ul>, each item needs its own <li> (list item) tag. Think of <ul> as the container, and <li> as each individual item in the list.
+
+Your task: Create an unordered list with three technologies you're learning: "HTML", "CSS", and "JavaScript". Each technology should be in its own list item.
+
+Structure:
+<ul>
+  <li>First item</li>
+  <li>Second item</li>
+  <li>Third item</li>
+</ul>`,
       starterCode: '<!-- Create your list here -->\n',
       hints: [
-        'Use <ul> for an unordered list',
-        'Each item needs an <li> tag',
-        'You need exactly three list items'
+        'Start with <ul> to begin your unordered list. Don\'t forget to close it with </ul> at the end!',
+        'Inside the <ul>, create three <li> tags - one for each technology.',
+        'The order matters! First item: HTML, Second: CSS, Third: JavaScript'
       ],
       validation: [
-        { selector: 'ul', exists: true, errorMsg: 'No <ul> element found' },
-        { selector: 'ul > li', count: 3, errorMsg: 'You need exactly 3 list items' },
-        { selector: 'ul > li:nth-child(1)', textContent: 'HTML', errorMsg: 'First item should be "HTML"' },
-        { selector: 'ul > li:nth-child(2)', textContent: 'CSS', errorMsg: 'Second item should be "CSS"' },
-        { selector: 'ul > li:nth-child(3)', textContent: 'JavaScript', errorMsg: 'Third item should be "JavaScript"' }
+        { selector: 'ul', exists: true, errorMsg: 'No <ul> element found. Use <ul> to create an unordered list.' },
+        { selector: 'ul > li', count: 3, errorMsg: 'You need exactly 3 list items. Make sure each technology has its own <li> tag.' },
+        { selector: 'ul > li:nth-child(1)', textContent: 'HTML', errorMsg: 'First list item should be "HTML"' },
+        { selector: 'ul > li:nth-child(2)', textContent: 'CSS', errorMsg: 'Second list item should be "CSS"' },
+        { selector: 'ul > li:nth-child(3)', textContent: 'JavaScript', errorMsg: 'Third list item should be "JavaScript"' }
       ]
     },
     {
       id: 'html-4',
       title: 'Adding a Link',
       difficulty: 'medium',
-      instructions: 'Create a link (a tag) with the text "Learn More" that points to "#learn"',
+      instructions: `Links are what make the web "web-like" - they connect pages together! In HTML, we create links using the <a> (anchor) tag.
+
+Links have two parts:
+1. The text that users see and click on
+2. The destination (where the link goes) - this goes in the "href" attribute
+
+Attributes are extra information we add to tags. They go inside the opening tag like this:
+<a href="destination">Click here</a>
+
+Your task: Create a link with the text "Learn More" that points to "#learn". The # symbol creates an internal link (useful for navigation on the same page).`,
       starterCode: '<!-- Create your link here -->\n',
       hints: [
-        'Use the <a> tag for links',
-        'The href attribute should be "#learn"',
-        'The link text should be "Learn More"'
+        'Use the <a> tag to create links. The structure is: <a href="url">Link Text</a>',
+        'The href attribute should be set to "#learn" - don\'t forget the # symbol!',
+        'The visible text between the tags should be: Learn More'
       ],
       validation: [
-        { selector: 'a', exists: true, errorMsg: 'No <a> element found' },
-        { selector: 'a', attribute: 'href', value: '#learn', errorMsg: 'href should be "#learn"' },
+        { selector: 'a', exists: true, errorMsg: 'No <a> element found. Use the <a> tag to create links.' },
+        { selector: 'a', attribute: 'href', value: '#learn', errorMsg: 'The href attribute should be "#learn"' },
         { selector: 'a', textContent: 'Learn More', errorMsg: 'Link text should be "Learn More"' }
       ]
     },
@@ -79,20 +105,31 @@ export const CHALLENGES = {
       id: 'html-5',
       title: 'Complete Structure',
       difficulty: 'hard',
-      instructions: 'Create a complete structure: h1 "My Page", p "This is my page", and a button with text "Click Me"',
+      instructions: `Excellent progress! Now let's combine everything you've learned into a complete page structure.
+
+      Real web pages are built by combining multiple HTML elements. In this challenge, you'll create a mini-page with three different elements, demonstrating how they work together.
+
+      Your task: Create a complete page structure with:
+      1. A heading (h1) that says "My Page" - the page title
+      2. A paragraph (p) that says "This is my page" - some content
+      3. A button element that says "Click Me" - for user interaction
+
+      Buttons are created with the <button> tag. Unlike links, buttons are typically used for actions like submitting forms or triggering JavaScript functions.
+
+      Think about the order - headings usually come first, then content, then action elements like buttons.`,
       starterCode: '<!-- Build the complete structure -->\n',
       hints: [
-        'Start with an h1, then add a p, then add a button',
-        'Use <button> for the button element',
-        'Make sure all text content matches exactly'
+        'You need three elements: <h1>, <p>, and <button>. Create them in that order.',
+        'Each element should be on its own line for better readability. Remember to close each tag!',
+        'Double-check your text: h1="My Page", p="This is my page", button="Click Me"'
       ],
       validation: [
-        { selector: 'h1', exists: true, errorMsg: 'No <h1> found' },
-        { selector: 'h1', textContent: 'My Page', errorMsg: 'h1 should say "My Page"' },
-        { selector: 'p', exists: true, errorMsg: 'No <p> found' },
-        { selector: 'p', textContent: 'This is my page', errorMsg: 'p should say "This is my page"' },
-        { selector: 'button', exists: true, errorMsg: 'No <button> found' },
-        { selector: 'button', textContent: 'Click Me', errorMsg: 'button should say "Click Me"' }
+        { selector: 'h1', exists: true, errorMsg: 'No <h1> found. Start with a heading.' },
+        { selector: 'h1', textContent: 'My Page', errorMsg: 'The h1 heading should say "My Page"' },
+        { selector: 'p', exists: true, errorMsg: 'No <p> found. Add a paragraph after the heading.' },
+        { selector: 'p', textContent: 'This is my page', errorMsg: 'The paragraph should say "This is my page"' },
+        { selector: 'button', exists: true, errorMsg: 'No <button> found. Add a button element.' },
+        { selector: 'button', textContent: 'Click Me', errorMsg: 'The button should say "Click Me"' }
       ]
     }
   ],
