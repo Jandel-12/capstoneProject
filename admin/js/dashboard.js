@@ -1,5 +1,5 @@
 //js/dashboard.js
-const API = 'http://localhost:5000/api';
+const API = 'https://el-royale-api.onrender.com/api';;
 
 // Grab token from URL if present (first time coming from login)
 const urlParams = new URLSearchParams(window.location.search);

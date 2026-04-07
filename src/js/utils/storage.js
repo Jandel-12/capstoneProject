@@ -229,7 +229,9 @@ export class Storage {
  */
 export class ProgressTracker {
   static PROGRESS_KEY = 'user_progress';
-  static API = 'http://localhost:5000/api';
+  static API = process.env.NODE_ENV === 'production'
+  ? 'https://el-royale-api.onrender.com/api'
+  : 'http://localhost:5000/api';
 
   static getToken() {
     return localStorage.getItem('studentToken');

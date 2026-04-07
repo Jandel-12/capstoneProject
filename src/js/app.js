@@ -454,7 +454,7 @@ class Application {
   async init() {
     try {
       const token = Auth.getToken();
-      const res = await fetch('http://localhost:5000/api/challenges', {
+      const res = await fetch('https://el-royale-api.onrender.com/api/challenges', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
