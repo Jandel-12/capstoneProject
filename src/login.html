@@ -224,7 +224,7 @@
 
 <script>
 const API = 'https://el-royale-api.onrender.com/api';
-const ADMIN_URL = 'https://el-royale-api.onrender.com/admin/dashboard.html';
+const ADMIN_URL = 'https://capstone-project-2hlxkhvcg-jandel-12s-projects.vercel.app/admin/dashboard.html';
 
   // Redirect if already logged in as student
   if (localStorage.getItem('studentToken')) {
@@ -358,9 +358,8 @@ const ADMIN_URL = 'https://el-royale-api.onrender.com/admin/dashboard.html';
       btn.textContent = 'Create Account';
     }
   };
-
-  // ── Admin Login ──
-  const handleAdminLogin = async () => {
+// ── Admin Login ──
+const handleAdminLogin = async () => {
     hideAlert('admin-alert');
     const email = document.getElementById('admin-email').value.trim();
     const password = document.getElementById('admin-password').value.trim();
@@ -389,16 +388,20 @@ const ADMIN_URL = 'https://el-royale-api.onrender.com/admin/dashboard.html';
       }
 
       if (data.role !== 'admin') {
-        showAlert('admin-alert', 'Access denied. Admins only.');
+        showAlert('admin-alert', 'Access denied. This account is not an admin.');
         return;
       }
 
+      // Save admin credentials
       localStorage.setItem('adminToken', data.token);
       localStorage.setItem('adminUser', JSON.stringify(data));
-      window.location.href = `${ADMIN_URL}?token=${data.token}&user=${encodeURIComponent(JSON.stringify(data))}`;
+
+      // ✅ Redirect to Vercel Admin Dashboard
+      window.location.href = ADMIN_URL;
 
     } catch (err) {
-      showAlert('admin-alert', 'Could not connect to server.');
+      console.error(err);
+      showAlert('admin-alert', 'Could not connect to server. Please try again.');
     } finally {
       btn.disabled = false;
       btn.textContent = 'Login as Admin';
