@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -12,7 +11,7 @@ const challengeRoutes = require('./routes/challenges');
 
 const app = express();
 
-// CORS Setup
+// CORS
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
@@ -29,7 +28,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/progress', progressRoutes);
@@ -38,11 +37,11 @@ app.use('/api/challenges', challengeRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Backend is running' });
+  res.json({ status: 'OK', message: 'El Royale API is running' });
 });
 
 app.get('/', (req, res) => {
-  res.json({ message: 'El Royale API is running!' });
+  res.json({ message: 'El Royale Backend is running!' });
 });
 
 const PORT = process.env.PORT || 5000;
@@ -50,11 +49,8 @@ const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB connected');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch(err => {
-    console.error('❌ MongoDB connection failed:', err);
-    process.exit(1);
+    console.error('❌ MongoDB error:', err);
   });
