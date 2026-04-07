@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Results | El Royale Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>El Royale</h2>
+        <p>Admin Panel</p>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><span>📊</span> Dashboard</a>
+        <a href="students.html" class="nav-item"><span>👥</span> Students</a>
+        <a href="progress.html" class="nav-item"><span>📈</span> Progress</a>
+        <a href="results.html" class="nav-item active"><span>📝</span> Quiz Results</a>
+        <a href="challenges.html" class="nav-item"><span>🧩</span> Challenges</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <h1 class="page-title">Quiz Results</h1>
+
+      <div class="table-card">
+        <div class="table-card-header">All Quiz Submissions</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Email</th>
+              <th>Category</th>
+              <th>Score</th>
+              <th>Result</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="results-table">
+            <tr><td colspan="6" style="text-align:center; color:#64748b;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+  </div>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    requireAuth();
+
+    const loadResults = async () => {
+      try {
+        const res = await authFetch(`${API}/results`);
+        const results = await res.json();
+        const tbody = document.getElementById('results-table');
+
+        if (results.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">No quiz results yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = results.map(r => `
+          <tr>
+            <td>${r.user?.name || '—'}</td>
+            <td>${r.user?.email || '—'}</td>
+            <td><span class="badge badge-primary">${r.category}</span></td>
+            <td>${r.score} / ${r.totalItems}</td>
+            <td>
+              <span class="badge ${r.passed ? 'badge-success' : 'badge-danger'}">
+                ${r.passed ? 'Passed' : 'Failed'}
+              </span>
+            </td>
+            <td>${new Date(r.takenAt).toLocaleDateString()}</td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        console.error('Error loading results:', err);
+      }
+    };
+
+    loadResults();
+  </script>
+</body>
+</html>

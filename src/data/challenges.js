@@ -3,7 +3,7 @@
  */
 
 export const CHALLENGES = {
-  // ===== HTML MODULE ===== (COMPLETE)
+  
   html: [
     {
       id: 'html-1',

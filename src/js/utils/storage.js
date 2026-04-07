@@ -229,62 +229,132 @@ export class Storage {
  */
 export class ProgressTracker {
   static PROGRESS_KEY = 'user_progress';
+  static API = 'http://localhost:5000/api';
 
-  /**
-   * Get user progress
-   * @returns {Object}
-   */
-  static getProgress() {
-    return Storage.get(this.PROGRESS_KEY, {
-      completedChallenges: [],
-      currentModule: null,
-      currentChallenge: 0,
-      totalStars: 0,
-      lastVisit: null
+  static getToken() {
+    return localStorage.getItem('studentToken');
+  }
+
+  static authFetch(url, options = {}) {
+    return fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.getToken()}`,
+        ...options.headers
+      }
     });
   }
 
   /**
-   * Save user progress
-   * @param {Object} progress
+   * Get progress from API, fallback to LocalStorage
    */
-  static saveProgress(progress) {
-    progress.lastVisit = new Date().toISOString();
-    return Storage.set(this.PROGRESS_KEY, progress);
+  static async getProgress() {
+  try {
+    const res = await this.authFetch(`${this.API}/progress/mine`);
+
+    // 🔧 Handle 401/403 properly
+    if (res.status === 401 || res.status === 403) {
+      console.warn('Token invalid or expired, logging out...');
+      localStorage.removeItem('studentToken');
+      localStorage.removeItem('studentUser');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const data = await res.json();
+    const completedChallenges = data
+      .filter(p => p.completed)
+      .map(p => p.challengeId.toString());
+
+    const progress = {
+      completedChallenges,
+      totalStars: completedChallenges.length,
+      lastVisit: new Date().toISOString()
+    };
+
+    Storage.set(this.PROGRESS_KEY, progress);
+    return progress;
+
+  } catch (err) {
+    console.warn('API unavailable, using LocalStorage fallback');
+    return Storage.get(this.PROGRESS_KEY, {
+      completedChallenges: [],
+      totalStars: 0,
+      lastVisit: null
+    });
   }
+}
 
   /**
-   * Mark challenge as completed
-   * @param {string} challengeId
+   * Mark challenge as completed — saves to API + LocalStorage
    */
-  static completeChallenge(challengeId) {
-    const progress = this.getProgress();
-    
+static async completeChallenge(challengeId, challengeTitle = '', category = '') {
+  // 🔍 Debug
+  console.log('Token in ProgressTracker:', this.getToken());
+  
+  try {
+    const res = await this.authFetch(`${this.API}/progress`, {
+      method: 'POST',
+      body: JSON.stringify({
+        challengeId,
+        challengeTitle,
+        category,
+        completed: true
+      })
+    });
+
+    // 🔍 Debug
+    console.log('Progress POST status:', res.status);
+    const data = await res.json();
+    console.log('Progress POST response:', data);
+
+  } catch (err) {
+    console.warn('Could not save progress to API:', err);
+  }
+
+    // Always update LocalStorage too
+    const progress = Storage.get(this.PROGRESS_KEY, {
+      completedChallenges: [],
+      totalStars: 0,
+      lastVisit: null
+    });
+
     if (!progress.completedChallenges.includes(challengeId)) {
       progress.completedChallenges.push(challengeId);
       progress.totalStars++;
     }
-    
-    return this.saveProgress(progress);
+
+    progress.lastVisit = new Date().toISOString();
+    Storage.set(this.PROGRESS_KEY, progress);
+    return progress;
   }
 
   /**
-   * Get completed challenges
-   * @returns {string[]}
+   * Get completed challenges (from LocalStorage for sync use)
    */
   static getCompletedChallenges() {
-    const progress = this.getProgress();
+    const progress = Storage.get(this.PROGRESS_KEY, {
+      completedChallenges: [],
+      totalStars: 0
+    });
     return progress.completedChallenges;
   }
 
   /**
-   * Get completed challenges for module
-   * @param {string} moduleId
-   * @returns {string[]}
+   * Get completed challenges for a module
    */
   static getModuleProgress(moduleId) {
     const completed = this.getCompletedChallenges();
     return completed.filter(id => id.startsWith(moduleId));
+  }
+
+  /**
+   * Get total stars
+   */
+  static getTotalStars() {
+    const progress = Storage.get(this.PROGRESS_KEY, { totalStars: 0 });
+    return progress.totalStars;
   }
 
   /**
@@ -293,14 +363,31 @@ export class ProgressTracker {
   static reset() {
     return Storage.remove(this.PROGRESS_KEY);
   }
+}
 
-  /**
-   * Get total stars earned
-   * @returns {number}
-   */
-  static getTotalStars() {
-    const progress = this.getProgress();
-    return progress.totalStars;
+/**
+ * Auth Helper - manage student session
+ */
+export class Auth {
+  static getToken() {
+    return localStorage.getItem('studentToken');
+  }
+
+  static getUser() {
+    const user = localStorage.getItem('studentUser');
+    return user ? JSON.parse(user) : null;
+  }
+
+  static isLoggedIn() {
+    return !!this.getToken();
+  }
+
+  // Clears everything including progress
+  static logout() {
+    localStorage.removeItem('studentToken');
+    localStorage.removeItem('studentUser');
+    Storage.clear(); // clears all el_royale_ prefixed keys including progress
+    window.location.href = 'login.html';
   }
 }
 

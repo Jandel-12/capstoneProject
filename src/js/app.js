@@ -1,4 +1,3 @@
-// src/js/app.js - Main Entry Point
 
 // Import CSS files
 import '../css/main.css';
@@ -7,26 +6,48 @@ import '../css/challenges.css';
 import '../css/challenge-list.css';
 
 // Import data
-import { CHALLENGES, MODULES } from '../data/challenges.js';
+// challenges loaded from API now
+let CHALLENGES = {};
+let MODULES = [];
 
 // Import core classes
 import { ChallengeEngine } from './core/ChallengeEngine.js';
 import { PreviewManager } from './core/PreviewManager.js';
 
-// Import utilities
+// Import utilities and authentication
 import dom, { getElement, getElements, addClass, removeClass, hide, toggleClass } from './utils/dom.js';
-import { Storage } from './utils/storage.js';
+import { Storage, Auth, ProgressTracker} from './utils/storage.js';
+
+// ===== AUTH CHECK =====
+if (!Auth.isLoggedIn()) {
+  window.location.href = 'login.html';
+}
+
 
 // ===== APPLICATION STATE =====
 class AppState {
-  constructor() {
+    constructor() {
     this.currentView = 'home';
     this.selectedModule = null;
     this.currentChallengeIndex = 0;
     this.hintLevel = 0;
     this.completedChallenges = Storage.get('completedChallenges') || [];
     this.userCode = '';
-    this.showingChallengeList = false; // New: track if showing challenge list
+    this.showingChallengeList = false;
+    this.user = Auth.getUser();
+
+    // 🆕 Sync progress from API in background
+    this.syncProgress();
+  }
+
+  async syncProgress() {
+    try {
+      const progress = await ProgressTracker.getProgress();
+      this.completedChallenges = progress.completedChallenges;
+      Storage.set('completedChallenges', this.completedChallenges);
+    } catch (err) {
+      console.warn('Progress sync failed:', err);
+    }
   }
 
   setView(view) {
@@ -48,12 +69,25 @@ class AppState {
     this.hintLevel++;
   }
 
-  addCompletedChallenge(challengeId) {
-    if (!this.completedChallenges.includes(challengeId)) {
-      this.completedChallenges.push(challengeId);
-      Storage.set('completedChallenges', this.completedChallenges);
-    }
+addCompletedChallenge(challengeId) {
+  if (!this.completedChallenges.includes(challengeId)) {
+    this.completedChallenges.push(challengeId);
+    Storage.set('completedChallenges', this.completedChallenges);
+
+    const challenge = this.getCurrentChallenge();
+    
+    // 🔍 Debug logs
+    console.log('Saving progress for:', challengeId);
+    console.log('Token:', localStorage.getItem('studentToken'));
+    console.log('Challenge:', challenge);
+
+    ProgressTracker.completeChallenge(
+      challengeId,
+      challenge ? challenge.title : '',
+      challenge ? challenge.type || '' : ''
+    );
   }
+}
 
   getCurrentChallenge() {
     if (!this.selectedModule) return null;
@@ -64,6 +98,8 @@ class AppState {
     if (!this.selectedModule) return 0;
     return CHALLENGES[this.selectedModule].length;
   }
+
+
 }
 
 // ===== UI CONTROLLER =====
@@ -195,7 +231,7 @@ class UIController {
             <div class="module-icon ${module.color}">${module.icon}</div>
             <div class="module-info">
               <h3>${module.name}</h3>
-              <p>${module.challenges} challenges • ${completed}/${module.challenges} completed</p>
+             
               ${completed > 0 ? `<p class="module-progress">⭐ ${completed} stars earned</p>` : ''}
               ${module.locked ? '<p class="locked-badge">🔒 Complete previous modules to unlock</p>' : ''}
             </div>
@@ -266,7 +302,7 @@ class UIController {
     
     // Update header
     this.elements.challengeTitle.textContent = challenge.title;
-    this.elements.challengeProgress.textContent = 
+  
       `Challenge ${this.state.currentChallengeIndex + 1} of ${this.state.getTotalChallenges()}`;
     this.elements.difficultyBadge.textContent = challenge.difficulty;
     this.elements.difficultyBadge.className = `difficulty-badge ${challenge.difficulty}`;
@@ -415,8 +451,33 @@ class Application {
     this.ui = new UIController(this.state);
   }
 
-  init() {
-    // Show initial view
+  async init() {
+    try {
+      const token = Auth.getToken();
+      const res = await fetch('http://localhost:5000/api/challenges', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      // Build MODULES and CHALLENGES from API response
+      MODULES = Object.values(data).map(d => ({
+        id: d.module.id,
+        name: d.module.name,
+        icon: d.module.icon,
+        color: d.module.color,
+        locked: d.module.locked,
+        challenges: d.challenges.length
+      }));
+
+      CHALLENGES = {};
+      Object.values(data).forEach(d => {
+        CHALLENGES[d.module.id] = d.challenges;
+      });
+
+    } catch (err) {
+      console.error('Failed to load challenges from API:', err);
+    }
+
     if (this.state.currentView === 'home') {
       this.ui.showHomeView();
     }
@@ -442,6 +503,10 @@ class Application {
     this.state.setChallenge(index);
     this.ui.showChallengeView();
   }
+
+  logout() {
+  Auth.logout(); // clears studentToken and redirects to login.html
+  }
 }
 
 // ===== INITIALIZE APP =====
@@ -449,9 +514,7 @@ let app;
 
 document.addEventListener('DOMContentLoaded', () => {
   app = new Application();
-  app.init();
-  
-  // Make app globally accessible for onclick handlers
+  app.init(); // now async
   window.app = app;
 });
 

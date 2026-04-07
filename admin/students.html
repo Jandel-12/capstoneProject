@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Students | El Royale Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="admin-layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>El Royale</h2>
+        <p>Admin Panel</p>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><span>📊</span> Dashboard</a>
+        <a href="students.html" class="nav-item active"><span>👥</span> Students</a>
+        <a href="progress.html" class="nav-item"><span>📈</span> Progress</a>
+        <a href="challenges.html" class="nav-item"><span>🧩</span> Challenges</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <h1 class="page-title">Students</h1>
+
+      <!-- Pending Students -->
+      <div class="table-card" style="margin-bottom: 2rem;">
+        <div class="table-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>⏳ Pending Approval</span>
+          <span id="pending-count" class="badge badge-danger">0</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>LRN</th>
+              <th>School Year</th>
+              <th>Registered</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pending-table">
+            <tr><td colspan="6" style="text-align:center; color:#64748b;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Approved Students -->
+      <div class="table-card">
+        <div class="table-card-header">✅ Approved Students</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>LRN</th>
+              <th>School Year</th>
+              <th>Status</th>
+              <th>Registered</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="students-table">
+            <tr><td colspan="7" style="text-align:center; color:#64748b;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+  </div>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    requireAuth();
+
+    const loadPending = async () => {
+      try {
+        const res = await authFetch(`${API}/users/pending`);
+        const users = await res.json();
+        const tbody = document.getElementById('pending-table');
+        const count = document.getElementById('pending-count');
+
+        count.textContent = users.length;
+
+        if (users.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">No pending registrations.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = users.map(user => `
+          <tr id="pending-${user._id}">
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>${user.lrn}</td>
+            <td>${user.studentId}</td>
+            <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+            <td style="display:flex; gap:0.5rem;">
+              <button class="btn-sm" style="background:#dcfce7; color:#16a34a;"
+                onclick="approveStudent('${user._id}')">Approve</button>
+              <button class="btn-sm btn-danger"
+                onclick="rejectStudent('${user._id}', '${user.name}')">Reject</button>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        console.error('Error loading pending:', err);
+      }
+    };
+
+    const loadStudents = async () => {
+      try {
+        const res = await authFetch(`${API}/users`);
+        const users = await res.json();
+        const tbody = document.getElementById('students-table');
+
+        if (users.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#64748b;">No approved students yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = users.map(user => `
+  <tr id="row-${user._id}">
+    <td>${user.name}</td>
+    <td>${user.email}</td>
+    <td>${user.lrn}</td>
+    <td>${user.studentId}</td>
+    <td>
+      <span class="badge ${user.isActive ? 'badge-success' : 'badge-danger'}">
+        ${user.isActive ? 'Active' : 'Inactive'}
+      </span>
+    </td>
+    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+    <td style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button class="btn-sm btn-warning"
+        onclick="toggleUser('${user._id}', ${user.isActive})">
+        ${user.isActive ? 'Deactivate' : 'Activate'}
+      </button>
+      <button class="btn-sm" style="background:#dbeafe; color:#2563eb;"
+        onclick="resetPassword('${user._id}', '${user.name}')">
+        Reset Password
+      </button>
+      <button class="btn-sm btn-danger"
+        onclick="deleteUser('${user._id}', '${user.name}')">
+        Delete
+      </button>
+    </td>
+  </tr>
+`).join('');
+
+      } catch (err) {
+        console.error('Error loading students:', err);
+      }
+    };
+
+    const approveStudent = async (id) => {
+      try {
+        const res = await authFetch(`${API}/users/${id}/approve`, { method: 'PUT' });
+        if (res.ok) {
+          loadPending();
+          loadStudents();
+        }
+      } catch (err) {
+        console.error('Approve error:', err);
+      }
+    };
+
+    const rejectStudent = async (id, name) => {
+      if (!confirm(`Reject and remove "${name}"?`)) return;
+      try {
+        const res = await authFetch(`${API}/users/${id}/reject`, { method: 'DELETE' });
+        if (res.ok) loadPending();
+      } catch (err) {
+        console.error('Reject error:', err);
+      }
+    };
+
+    const toggleUser = async (id, isActive) => {
+      if (!confirm(`Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this student?`)) return;
+      try {
+        const res = await authFetch(`${API}/users/${id}/toggle`, { method: 'PUT' });
+        if (res.ok) loadStudents();
+      } catch (err) {
+        console.error('Toggle error:', err);
+      }
+    };
+
+    const deleteUser = async (id, name) => {
+      if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+      try {
+        const res = await authFetch(`${API}/users/${id}`, { method: 'DELETE' });
+        if (res.ok) loadStudents();
+      } catch (err) {
+        console.error('Delete error:', err);
+      }
+    };
+
+  const resetPassword = async (id, name) => {
+  const newPassword = prompt(`Enter new password for "${name}" (min. 8 characters):`);
+  
+  if (!newPassword) return;
+  
+  if (newPassword.length < 8) {
+    alert('Password must be at least 8 characters.');
+    return;
+  }
+
+  try {
+    const res = await authFetch(`${API}/users/${id}/reset-password`, {
+      method: 'PUT',
+      body: JSON.stringify({ newPassword })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert(`✅ Password for "${name}" has been reset successfully.`);
+    } else {
+      alert(data.message || 'Failed to reset password.');
+    }
+  } catch (err) {
+    console.error('Reset password error:', err);
+    alert('An error occurred.');
+  }
+};
+
+    loadPending();
+    loadStudents();
+  </script>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenges | El Royale Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .module-tabs {
+      display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .module-tab {
+      padding: 0.5rem 1.25rem; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); cursor: pointer; font-size: 0.875rem;
+      font-weight: 600; color: var(--muted); transition: all 0.2s;
+    }
+    .module-tab.active {
+      background: var(--primary); color: white; border-color: var(--primary);
+    }
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white; border-radius: 12px; padding: 2rem;
+      width: 100%; max-width: 720px; max-height: 92vh; overflow-y: auto;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
+    }
+    .modal-header h2 { font-size: 1.1rem; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);
+    }
+    .field-group { margin-bottom: 1.2rem; }
+    .field-group label {
+      display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: #374151;
+    }
+    .field-group input, .field-group select, .field-group textarea {
+      width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.9rem; outline: none; font-family: inherit;
+    }
+    .field-group textarea { min-height: 100px; resize: vertical; font-family: monospace; }
+    .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+      border-color: var(--primary);
+    }
+    .validation-rules {
+      margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;
+    }
+    .rule-item {
+      background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem; margin-bottom: 0.8rem;
+    }
+    .rule-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;
+    }
+    .btn-remove-rule {
+      background: #ef4444; color: white; border: none; padding: 0.3rem 0.8rem;
+      border-radius: 6px; font-size: 0.8rem; cursor: pointer;
+    }
+    .btn-add-rule {
+      padding: 0.6rem 1.25rem; background: var(--primary); color: white;
+      border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .modal-footer {
+      display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 2rem;
+    }
+    .btn-cancel, .btn-save {
+      padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer;
+    }
+    .btn-cancel { border: 1px solid var(--border); background: white; }
+    .btn-save { border: none; background: var(--primary); color: white; }
+    .btn-add {
+      padding: 0.6rem 1.25rem; background: var(--primary); color: white;
+      border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>El Royale</h2>
+        <p>Admin Panel</p>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><span>📊</span> Dashboard</a>
+        <a href="students.html" class="nav-item"><span>👥</span> Students</a>
+        <a href="progress.html" class="nav-item"><span>📈</span> Progress</a>
+        <a href="challenges.html" class="nav-item active"><span>🧩</span> Challenges</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h1 class="page-title" style="margin:0;">Challenges</h1>
+        <button class="btn-add" onclick="openAddModal()">+ Add Challenge</button>
+      </div>
+
+      <div class="module-tabs" id="module-tabs"></div>
+
+      <div class="table-card">
+        <div class="table-card-header" id="table-header">All Challenges</div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Module</th>
+              <th>Difficulty</th>
+              <th>Type</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="challenges-table">
+            <tr><td colspan="6" style="text-align:center; color:#64748b;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Add Challenge</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+
+      <div class="field-group">
+        <label>Challenge ID (e.g. html-6)</label>
+        <input type="text" id="field-id" placeholder="html-6" />
+      </div>
+      <div class="field-group">
+        <label>Module ID (e.g. html, css, flexbox, javascript)</label>
+        <input type="text" id="field-moduleId" placeholder="html" />
+      </div>
+      <div class="field-group">
+        <label>Title</label>
+        <input type="text" id="field-title" placeholder="Your First Heading" />
+      </div>
+      <div class="field-group">
+        <label>Difficulty</label>
+        <select id="field-difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Type</label>
+        <select id="field-type">
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="javascript">JavaScript</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Instructions</label>
+        <textarea id="field-instructions" placeholder="Full instructions for the student..."></textarea>
+      </div>
+      <div class="field-group">
+        <label>Starter Code</label>
+        <textarea id="field-starterCode" placeholder="<!-- Starter code here -->" style="min-height:140px;"></textarea>
+      </div>
+      <div class="field-group">
+        <label>Hints (one per line)</label>
+        <textarea id="field-hints" placeholder="Hint 1&#10;Hint 2&#10;Hint 3"></textarea>
+      </div>
+
+      <!-- Validation Rules -->
+      <div class="validation-rules">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+          <label style="margin:0; font-weight:600;">Validation Rules</label>
+          <button type="button" class="btn-add-rule" onclick="addValidationRule()">+ Add Rule</button>
+        </div>
+        <div id="validation-rules-container"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" onclick="saveChallenge()">Save Challenge</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    requireAuth();
+
+    let allChallenges = {};
+    let allModules = [];
+    let currentModule = 'all';
+    let editingId = null;
+    let validationRules = [];
+
+    const loadData = async () => {
+      try {
+        const [challengeRes, moduleRes] = await Promise.all([
+          authFetch(`${API}/challenges`),
+          authFetch(`${API}/challenges/modules`)
+        ]);
+
+        allChallenges = await challengeRes.json();
+        allModules = await moduleRes.json();
+
+        renderModuleTabs();
+        renderChallenges();
+      } catch (err) {
+        console.error('Error loading data:', err);
+      }
+    };
+
+    const renderModuleTabs = () => {
+      const tabs = document.getElementById('module-tabs');
+      tabs.innerHTML = `
+        <button class="module-tab ${currentModule === 'all' ? 'active' : ''}" onclick="switchModule('all')">All</button>
+        ${allModules.map(m => `
+          <button class="module-tab ${currentModule === m.id ? 'active' : ''}" onclick="switchModule('${m.id}')">
+            ${m.icon || '📌'} ${m.name}
+          </button>
+        `).join('')}
+      `;
+    };
+
+    const renderChallenges = () => {
+      const tbody = document.getElementById('challenges-table');
+      const header = document.getElementById('table-header');
+      let challenges = [];
+
+      if (currentModule === 'all') {
+        header.textContent = 'All Challenges';
+        Object.values(allChallenges).forEach(data => {
+          challenges = challenges.concat(data.challenges || []);
+        });
+      } else {
+        const moduleData = allChallenges[currentModule];
+        if (moduleData) {
+          header.textContent = `${moduleData.module?.icon || ''} ${moduleData.module?.name || currentModule}`;
+          challenges = moduleData.challenges || [];
+        }
+      }
+
+      if (challenges.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">No challenges found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = challenges
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map((c, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${c.title}</td>
+            <td>${c.moduleId}</td>
+            <td>
+              <span class="badge ${c.difficulty === 'easy' ? 'badge-success' : c.difficulty === 'medium' ? 'badge-primary' : 'badge-danger'}">
+                ${c.difficulty}
+              </span>
+            </td>
+            <td>${c.type}</td>
+            <td style="display:flex; gap:0.5rem;">
+              <button class="btn-sm btn-warning" onclick="openEditModal('${c.id}')">Edit</button>
+              <button class="btn-sm btn-danger" onclick="deleteChallenge('${c.id}', '${c.title.replace(/'/g, "\\'")}')">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+    };
+
+    const switchModule = (moduleId) => {
+      currentModule = moduleId;
+      renderModuleTabs();
+      renderChallenges();
+    };
+
+    // ── Modal ──
+
+    const openAddModal = () => {
+      editingId = null;
+      document.getElementById('modal-title').textContent = 'Add Challenge';
+      document.getElementById('field-id').value = '';
+      document.getElementById('field-id').disabled = false;
+      document.getElementById('field-moduleId').value = '';
+      document.getElementById('field-title').value = '';
+      document.getElementById('field-difficulty').value = 'easy';
+      document.getElementById('field-type').value = 'html';
+      document.getElementById('field-instructions').value = '';
+      document.getElementById('field-starterCode').value = '';
+      document.getElementById('field-hints').value = '';
+      validationRules = [];
+      renderValidationRules();
+      document.getElementById('modal-overlay').classList.add('open');
+    };
+
+    const openEditModal = (challengeId) => {
+      editingId = challengeId;
+      let challenge = null;
+
+      Object.values(allChallenges).forEach(data => {
+        const found = (data.challenges || []).find(c => c.id === challengeId);
+        if (found) challenge = found;
+      });
+
+      if (!challenge) return;
+
+      document.getElementById('modal-title').textContent = 'Edit Challenge';
+      document.getElementById('field-id').value = challenge.id;
+      document.getElementById('field-id').disabled = true;
+      document.getElementById('field-moduleId').value = challenge.moduleId || '';
+      document.getElementById('field-title').value = challenge.title || '';
+      document.getElementById('field-difficulty').value = challenge.difficulty || 'easy';
+      document.getElementById('field-type').value = challenge.type || 'html';
+      document.getElementById('field-instructions').value = challenge.instructions || '';
+      document.getElementById('field-starterCode').value = challenge.starterCode || '';
+      document.getElementById('field-hints').value = (challenge.hints || []).join('\n');
+      validationRules = challenge.validation ? [...challenge.validation] : [];
+      renderValidationRules();
+      document.getElementById('modal-overlay').classList.add('open');
+    };
+
+    const closeModal = () => {
+      document.getElementById('modal-overlay').classList.remove('open');
+      editingId = null;
+    };
+
+    // ── Validation Rules ──
+
+    const renderValidationRules = () => {
+      const container = document.getElementById('validation-rules-container');
+      container.innerHTML = '';
+
+      if (validationRules.length === 0) {
+        container.innerHTML = `<p style="color:#64748b; font-size:0.875rem;">No rules yet. Click "+ Add Rule" to add one.</p>`;
+        return;
+      }
+
+      validationRules.forEach((rule, index) => {
+        const div = document.createElement('div');
+        div.className = 'rule-item';
+        div.innerHTML = `
+          <div class="rule-header">
+            <strong>Rule ${index + 1}</strong>
+            <button type="button" class="btn-remove-rule" onclick="removeValidationRule(${index})">Remove</button>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+            <div>
+              <label>Type</label>
+              <select onchange="updateRule(${index}, 'type', this.value)">
+                <option value="exists" ${rule.type === 'exists' ? 'selected' : ''}>Exists</option>
+                <option value="text" ${rule.type === 'text' ? 'selected' : ''}>Text Content</option>
+                <option value="count" ${rule.type === 'count' ? 'selected' : ''}>Count</option>
+                <option value="attribute" ${rule.type === 'attribute' ? 'selected' : ''}>Attribute</option>
+                <option value="style" ${rule.type === 'style' ? 'selected' : ''}>Style (CSS)</option>
+                <option value="domChange" ${rule.type === 'domChange' ? 'selected' : ''}>DOM Change (JS)</option>
+                <option value="eventListener" ${rule.type === 'eventListener' ? 'selected' : ''}>Event Listener (JS)</option>
+                <option value="elementExists" ${rule.type === 'elementExists' ? 'selected' : ''}>Element Exists (JS)</option>
+              </select>
+            </div>
+            <div>
+              <label>Selector (e.g. h1, .btn, #id)</label>
+              <input type="text" value="${rule.selector || ''}" 
+                onchange="updateRule(${index}, 'selector', this.value)" 
+                placeholder="h1" />
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-top:0.8rem;">
+            <div>
+              <label>Expected Value</label>
+              <input type="text" value="${rule.expected || ''}" 
+                onchange="updateRule(${index}, 'expected', this.value)" 
+                placeholder="Hello El Royale" />
+            </div>
+            <div>
+              <label>Error Message</label>
+              <input type="text" value="${rule.message || ''}" 
+                onchange="updateRule(${index}, 'message', this.value)" 
+                placeholder="No h1 element found" />
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    };
+
+    const updateRule = (index, field, value) => {
+      if (validationRules[index]) {
+        validationRules[index][field] = value;
+      }
+    };
+
+    const addValidationRule = () => {
+      validationRules.push({ type: 'exists', selector: '', expected: '', message: '' });
+      renderValidationRules();
+    };
+
+    const removeValidationRule = (index) => {
+      validationRules.splice(index, 1);
+      renderValidationRules();
+    };
+
+    // ── Save ──
+
+    const saveChallenge = async () => {
+      const body = {
+        id: document.getElementById('field-id').value.trim(),
+        moduleId: document.getElementById('field-moduleId').value.trim().toLowerCase(),
+        title: document.getElementById('field-title').value.trim(),
+        difficulty: document.getElementById('field-difficulty').value,
+        type: document.getElementById('field-type').value,
+        instructions: document.getElementById('field-instructions').value.trim(),
+        starterCode: document.getElementById('field-starterCode').value,
+        hints: document.getElementById('field-hints').value
+          .split('\n').map(h => h.trim()).filter(h => h.length > 0),
+        validation: validationRules.filter(r => r.type && r.selector)
+      };
+
+      if (!body.id || !body.moduleId || !body.title || !body.instructions) {
+        alert('Please fill in ID, Module ID, Title, and Instructions.');
+        return;
+      }
+
+      try {
+        const url = editingId
+          ? `${API}/challenges/${editingId}`
+          : `${API}/challenges`;
+        const method = editingId ? 'PUT' : 'POST';
+
+        const res = await authFetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (res.ok) {
+          closeModal();
+          loadData();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.message || 'Failed to save challenge.');
+        }
+      } catch (err) {
+        console.error('Save error:', err);
+        alert('An error occurred while saving.');
+      }
+    };
+
+    const deleteChallenge = async (id, title) => {
+      if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+      try {
+        const res = await authFetch(`${API}/challenges/${id}`, { method: 'DELETE' });
+        if (res.ok) loadData();
+        else alert('Failed to delete challenge.');
+      } catch (err) {
+        console.error('Delete error:', err);
+      }
+    };
+
+    loadData();
+  </script>
+</body>
+</html>

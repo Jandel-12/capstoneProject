@@ -62,6 +62,13 @@ module.exports = (env, argv) => {
         filename: 'index.html',
         minify: isProduction,
       }),
+        new HtmlWebpackPlugin({
+        template: './src/login.html',
+        filename: 'login.html',
+        chunks: [], // No JS bundle injected — login.html handles its own scripts
+        minify: isProduction,
+      }),
+
       // Extract CSS to separate file in production
       ...(isProduction
         ? [

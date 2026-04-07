@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Royale | Login</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 440px;
+      overflow: hidden;
+    }
+
+    .auth-header {
+      background: #f97316;
+      padding: 2rem;
+      text-align: center;
+      color: white;
+    }
+
+    .auth-header h1 { font-size: 1.6rem; font-weight: 700; }
+    .auth-header p { opacity: 0.85; margin-top: 0.25rem; font-size: 0.9rem; }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #64748b;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      color: #2563eb;
+      border-bottom-color: #2563eb;
+    }
+
+    .tab.admin-tab.active {
+      color: #7c3aed;
+      border-bottom-color: #7c3aed;
+    }
+
+    .auth-body { padding: 1.75rem; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .form-group { margin-bottom: 1.1rem; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: #374151;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .form-group input:focus { border-color: #2563eb; }
+    .admin-tab-content .form-group input:focus { border-color: #7c3aed; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.8rem;
+      background: #f97316;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s;
+    }
+
+    .btn-submit:hover { background: #1d4ed8; }
+    .btn-submit:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .btn-submit.admin { background: #7c3aed; }
+    .btn-submit.admin:hover { background: #6d28d9; }
+    .btn-submit.admin:disabled { background: #c4b5fd; }
+
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .alert-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    .admin-badge {
+      display: inline-block;
+      background: #ede9fe;
+      color: #7c3aed;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 1.25rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-card">
+  <div class="auth-header">
+    <h1>El Royale</h1>
+    <p>Interactive Learning Platform</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-login" onclick="switchTab('login')">Login</button>
+    <button class="tab" id="tab-register" onclick="switchTab('register')">Register</button>
+    <button class="tab admin-tab" id="tab-admin" onclick="switchTab('admin')">Admin</button>
+  </div>
+
+  <div class="auth-body">
+
+    <!-- Student Login -->
+    <div id="login-tab" class="tab-content active">
+      <div id="login-alert" class="alert alert-error"></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" />
+      </div>
+      <button class="btn-submit" id="login-btn" onclick="handleLogin()">Login</button>
+    </div>
+
+    <!-- Student Register -->
+    <div id="register-tab" class="tab-content">
+      <div id="register-alert" class="alert"></div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="reg-name" placeholder="Juan Dela Cruz" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>LRN</label>
+          <input type="text" id="reg-lrn" placeholder="123456789012" maxlength="12" />
+        </div>
+        <div class="form-group">
+          <label>School Year</label>
+          <input type="text" id="reg-studentId" placeholder="2023-0001" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Min. 8 characters" />
+      </div>
+      <button class="btn-submit" id="register-btn" onclick="handleRegister()">Create Account</button>
+    </div>
+
+    <!-- Admin Login -->
+    <div id="admin-tab" class="tab-content admin-tab-content">
+      <div id="admin-alert" class="alert alert-error"></div>
+      <div style="text-align:center;">
+        <span class="admin-badge">🔐 Admin Access</span>
+      </div>
+      <div class="form-group">
+        <label>Admin Email</label>
+        <input type="email" id="admin-email" placeholder="admin@elroyale.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="admin-password" placeholder="••••••••" />
+      </div>
+      <button class="btn-submit admin" id="admin-btn" onclick="handleAdminLogin()">
+        Login as Admin
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:5000/api';
+  const ADMIN_URL = 'http://localhost:5000/admin/dashboard.html';
+
+  // Redirect if already logged in as student
+  if (localStorage.getItem('studentToken')) {
+    window.location.href = 'index.html';
+  }
+
+  const switchTab = (tab) => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById(`${tab}-tab`).classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+  };
+
+  const showAlert = (id, message, type = 'error') => {
+    const el = document.getElementById(id);
+    el.textContent = message;
+    el.className = `alert alert-${type}`;
+    el.style.display = 'block';
+  };
+
+  const hideAlert = (id) => {
+    document.getElementById(id).style.display = 'none';
+  };
+
+  // ── Student Login ──
+  const handleLogin = async () => {
+    hideAlert('login-alert');
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    const btn = document.getElementById('login-btn');
+
+    if (!email || !password) {
+      showAlert('login-alert', 'Please fill in all fields.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAlert('login-alert', data.message || 'Login failed.');
+        return;
+      }
+
+      if (data.role === 'admin') {
+        showAlert('login-alert', 'Please use the Admin tab.');
+        return;
+      }
+
+      // Save token and redirect
+      localStorage.setItem('studentToken', data.token);
+      localStorage.setItem('studentUser', JSON.stringify(data));
+      window.location.href = 'index.html';
+
+    } catch (err) {
+      showAlert('login-alert', 'Could not connect to server.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Login';
+    }
+  };
+
+  // ── Student Register ──
+  const handleRegister = async () => {
+    hideAlert('register-alert');
+    const name = document.getElementById('reg-name').value.trim();
+    const lrn = document.getElementById('reg-lrn').value.trim();
+    const studentId = document.getElementById('reg-studentId').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value.trim();
+    const btn = document.getElementById('register-btn');
+
+    if (!name || !lrn || !studentId || !email || !password) {
+      showAlert('register-alert', 'Please fill in all fields.');
+      return;
+    }
+
+    if (lrn.length !== 12) {
+      showAlert('register-alert', 'LRN must be exactly 12 digits.');
+      return;
+    }
+
+    if (password.length < 8) {
+      showAlert('register-alert', 'Password must be at least 8 characters.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, lrn, studentId, email, password })
+      });
+
+      const data = await res.json();
+
+  if (!res.ok) {
+    showAlert('register-alert', data.message || 'Registration failed.');
+    return;
+  }
+
+  // Clear leftover LocalStorage
+  localStorage.removeItem('studentToken');
+  localStorage.removeItem('studentUser');
+  localStorage.removeItem('el_royale_completedChallenges');
+  localStorage.removeItem('el_royale_user_progress');
+
+  // Show pending message
+  showAlert('register-alert', '✅ Registration successful! Please wait for admin approval before logging in.', 'success');
+    btn.disabled = true;
+
+      // Show pending message — don't auto login
+      showAlert('register-alert', '✅ Registration successful! Please wait for admin approval before logging in.', 'success');
+      btn.disabled = true;
+
+    } catch (err) {
+      showAlert('register-alert', 'Could not connect to server.');
+    } finally {
+      btn.textContent = 'Create Account';
+    }
+  };
+
+  // ── Admin Login ──
+  const handleAdminLogin = async () => {
+    hideAlert('admin-alert');
+    const email = document.getElementById('admin-email').value.trim();
+    const password = document.getElementById('admin-password').value.trim();
+    const btn = document.getElementById('admin-btn');
+
+    if (!email || !password) {
+      showAlert('admin-alert', 'Please fill in all fields.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAlert('admin-alert', data.message || 'Login failed.');
+        return;
+      }
+
+      if (data.role !== 'admin') {
+        showAlert('admin-alert', 'Access denied. Admins only.');
+        return;
+      }
+
+      localStorage.setItem('adminToken', data.token);
+      localStorage.setItem('adminUser', JSON.stringify(data));
+      window.location.href = `${ADMIN_URL}?token=${data.token}&user=${encodeURIComponent(JSON.stringify(data))}`;
+
+    } catch (err) {
+      showAlert('admin-alert', 'Could not connect to server.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Login as Admin';
+    }
+  };
+
+  // Enter key support
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const active = document.querySelector('.tab-content.active').id;
+    if (active === 'login-tab') handleLogin();
+    else if (active === 'register-tab') handleRegister();
+    else if (active === 'admin-tab') handleAdminLogin();
+  });
+</script>
+
+</body>
+</html>

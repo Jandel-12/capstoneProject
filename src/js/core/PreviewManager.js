@@ -1,4 +1,3 @@
-// src/js/core/PreviewManager.js
 
 /**
  * PreviewManager - Handles live preview rendering in iframe

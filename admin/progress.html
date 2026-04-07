@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress | El Royale Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .progress-bar-wrap {
+      background: #e2e8f0;
+      border-radius: 999px;
+      height: 10px;
+      width: 160px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 0.8rem;
+    }
+    .progress-bar-fill {
+      background: #2563eb;
+      height: 10px;
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+    .badge {
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .badge-primary { background: #dbeafe; color: #1e40af; }
+
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .chip {
+      display: inline-block;
+      padding: 0.35rem 0.8rem;
+      background: #dcfce7;
+      color: #16a34a;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      margin: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>El Royale</h2>
+        <p>Admin Panel</p>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><span>📊</span> Dashboard</a>
+        <a href="students.html" class="nav-item"><span>👥</span> Students</a>
+        <a href="progress.html" class="nav-item active"><span>📈</span> Progress</a>
+  
+        <a href="challenges.html" class="nav-item"><span>🧩</span> Challenges</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <h1 class="page-title">Student Progress</h1>
+
+      <div class="table-card">
+        <div class="table-card-header">Click on a student to view their completed challenges</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Email</th>
+              <th>Total Completed</th>
+              <th>HTML</th>
+              <th>CSS</th>
+              <th>JavaScript</th>
+              <th>Last Activity</th>
+            </tr>
+          </thead>
+          <tbody id="progress-table">
+            <tr><td colspan="7" style="text-align:center; color:#64748b;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-student-name">Student Name</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div id="modal-content">
+        <!-- Filled by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    requireAuth();
+
+    let allProgressData = [];
+
+    const loadProgress = async () => {
+      try {
+        const [progressRes, usersRes] = await Promise.all([
+          authFetch(`${API}/progress`),
+          authFetch(`${API}/users`)
+        ]);
+
+        const progressData = await progressRes.json();
+        const users = await usersRes.json();
+
+        const tbody = document.getElementById('progress-table');
+        allProgressData = []; // reset
+
+        const studentMap = {};
+        users.forEach(user => {
+          studentMap[user._id] = {
+            user,
+            html: 0,
+            css: 0,
+            js: 0,
+            totalCompleted: 0,
+            lastActivity: null,
+            completedChallenges: []
+          };
+        });
+
+        progressData.forEach(p => {
+          if (!p.completed) return;
+          const userId = p.user?._id || p.user;
+          if (!studentMap[userId]) return;
+
+          const category = (p.category || p.type || '').toLowerCase();
+
+          if (category === 'html') studentMap[userId].html++;
+          else if (category === 'css') studentMap[userId].css++;
+          else if (category.includes('javascript') || category === 'js') studentMap[userId].js++;
+
+          studentMap[userId].totalCompleted++;
+          studentMap[userId].completedChallenges.push({
+            title: p.challengeTitle || p.challengeId || 'Unknown Challenge',
+            category: category.toUpperCase(),
+            completedAt: p.completedAt
+          });
+
+          const date = new Date(p.completedAt || p.updatedAt);
+          if (!studentMap[userId].lastActivity || date > studentMap[userId].lastActivity) {
+            studentMap[userId].lastActivity = date;
+          }
+        });
+
+        allProgressData = Object.values(studentMap);
+
+        let rows = '';
+        allProgressData.forEach((data, index) => {
+          const lastActivity = data.lastActivity 
+            ? data.lastActivity.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) 
+            : '—';
+
+          rows += `
+            <tr class="clickable-row" onclick="showStudentDetail(${index})">
+              <td><strong>${data.user.name}</strong></td>
+              <td>${data.user.email}</td>
+              <td><strong>${data.totalCompleted}</strong></td>
+              <td><span class="badge badge-primary">${data.html}</span></td>
+              <td><span class="badge badge-primary">${data.css}</span></td>
+              <td><span class="badge badge-primary">${data.js}</span></td>
+              <td>${lastActivity}</td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = rows || `<tr><td colspan="7" style="text-align:center; color:#64748b;">No progress data yet.</td></tr>`;
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('progress-table').innerHTML = 
+          `<tr><td colspan="7" style="text-align:center; color:red;">Failed to load progress.</td></tr>`;
+      }
+    };
+
+    // Show modal with completed challenges
+    window.showStudentDetail = (index) => {
+      const data = allProgressData[index];
+      if (!data) return;
+
+      document.getElementById('modal-student-name').textContent = `${data.user.name}'s Progress`;
+
+      let content = `<p><strong>Total Completed:</strong> ${data.totalCompleted} challenges</p>`;
+
+      if (data.completedChallenges.length === 0) {
+        content += `<p style="color:#64748b; font-style:italic;">No challenges completed yet.</p>`;
+      } else {
+        content += `<div class="challenge-chips">`;
+        data.completedChallenges.forEach(c => {
+          content += `
+            <span class="chip">
+              ✓ ${c.title} <small>(${c.category})</small>
+            </span>
+          `;
+        });
+        content += `</div>`;
+      }
+
+      document.getElementById('modal-content').innerHTML = content;
+      document.getElementById('detail-modal').classList.add('open');
+    };
+
+    window.closeModal = () => {
+      document.getElementById('detail-modal').classList.remove('open');
+    };
+
+    // Close modal when clicking outside
+    document.getElementById('detail-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // Load data
+    loadProgress();
+  </script>
+</body>
+</html>
