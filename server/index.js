@@ -16,7 +16,7 @@ const app = express();
 const corsOptions = {
   origin: [
     'http://localhost:3000',
-    'https://el-royale-platform.vercel.app'
+    process.env.FRONTEND_URL
   ],
   credentials: true
 };
