@@ -1,7 +1,5 @@
-//js/dashboard.js
-const API = 'https://el-royale-api.onrender.com/api';;
+const API = 'https://el-royale-api.onrender.com/api';
 
-// Grab token from URL if present (first time coming from login)
 const urlParams = new URLSearchParams(window.location.search);
 const urlToken = urlParams.get('token');
 const urlUser = urlParams.get('user');
@@ -17,7 +15,7 @@ const getToken = () => localStorage.getItem('adminToken');
 
 const requireAuth = () => {
   const token = getToken();
-  if (!token) window.location.href = 'http://localhost:3000/login.html';
+  if (!token) window.location.href = 'https://capstone-project-psi-seven.vercel.app/login.html';
 };
 
 const authFetch = (url, options = {}) => {
@@ -34,5 +32,5 @@ const authFetch = (url, options = {}) => {
 const logout = () => {
   localStorage.removeItem('adminToken');
   localStorage.removeItem('adminUser');
-  window.location.href = 'http://localhost:3000/login.html';
+  window.location.href = 'https://capstone-project-psi-seven.vercel.app/login.html';
 };
