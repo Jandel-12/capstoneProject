@@ -393,8 +393,8 @@ const handleAdminLogin = async () => {
     localStorage.setItem('adminUser', JSON.stringify(data));
 
     // Redirect to Admin Panel with token
-    const ADMIN_URL = 'https://capstone-project-1ijtnofkf-jandel-12s-projects.vercel.app/admin/dashboard.html';
-    window.location.href = `${ADMIN_URL}?token=${data.token}`;
+    const ADMIN_URL = 'https://el-royale-api.onrender.com/admin/dashboard.html';;
+    window.location.href = `${ADMIN_URL}?token=${data.token}&user=${encodeURIComponent(JSON.stringify(data))}`;
 
   } catch (err) {
     console.error(err);
