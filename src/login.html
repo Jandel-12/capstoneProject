@@ -224,7 +224,7 @@
 
 <script>
 const API = 'https://el-royale-api.onrender.com/api';
-const ADMIN_URL = 'https://capstone-project-2hlxkhvcg-jandel-12s-projects.vercel.app/admin/dashboard.html';
+const ADMIN_URL = 'https://el-royale-api.onrender.com/admin/dashboard.html';
 
   // Redirect if already logged in as student
   if (localStorage.getItem('studentToken')) {
@@ -348,10 +348,6 @@ const ADMIN_URL = 'https://capstone-project-2hlxkhvcg-jandel-12s-projects.vercel
   showAlert('register-alert', '✅ Registration successful! Please wait for admin approval before logging in.', 'success');
     btn.disabled = true;
 
-      // Show pending message — don't auto login
-      showAlert('register-alert', '✅ Registration successful! Please wait for admin approval before logging in.', 'success');
-      btn.disabled = true;
-
     } catch (err) {
       showAlert('register-alert', 'Could not connect to server.');
     } finally {
@@ -360,53 +356,54 @@ const ADMIN_URL = 'https://capstone-project-2hlxkhvcg-jandel-12s-projects.vercel
   };
 // ── Admin Login ──
 const handleAdminLogin = async () => {
-    hideAlert('admin-alert');
-    const email = document.getElementById('admin-email').value.trim();
-    const password = document.getElementById('admin-password').value.trim();
-    const btn = document.getElementById('admin-btn');
+  hideAlert('admin-alert');
+  const email = document.getElementById('admin-email').value.trim();
+  const password = document.getElementById('admin-password').value.trim();
+  const btn = document.getElementById('admin-btn');
 
-    if (!email || !password) {
-      showAlert('admin-alert', 'Please fill in all fields.');
+  if (!email || !password) {
+    showAlert('admin-alert', 'Please fill in all fields.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Logging in...';
+
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert('admin-alert', data.message || 'Login failed.');
       return;
     }
 
-    btn.disabled = true;
-    btn.textContent = 'Logging in...';
-
-    try {
-      const res = await fetch(`${API}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        showAlert('admin-alert', data.message || 'Login failed.');
-        return;
-      }
-
-      if (data.role !== 'admin') {
-        showAlert('admin-alert', 'Access denied. This account is not an admin.');
-        return;
-      }
-
-      // Save admin credentials
-      localStorage.setItem('adminToken', data.token);
-      localStorage.setItem('adminUser', JSON.stringify(data));
-
-      // ✅ Redirect to Vercel Admin Dashboard
-      window.location.href = ADMIN_URL;
-
-    } catch (err) {
-      console.error(err);
-      showAlert('admin-alert', 'Could not connect to server. Please try again.');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Login as Admin';
+    if (data.role !== 'admin') {
+      showAlert('admin-alert', 'Access denied. Admins only.');
+      return;
     }
-  };
+
+    // Save token
+    localStorage.setItem('adminToken', data.token);
+    localStorage.setItem('adminUser', JSON.stringify(data));
+
+    // Redirect to Admin Panel with token
+    const ADMIN_URL = 'https://capstone-project-1ijtnofkf-jandel-12s-projects.vercel.app/admin/dashboard.html';
+    window.location.href = `${ADMIN_URL}?token=${data.token}`;
+
+  } catch (err) {
+    console.error(err);
+    showAlert('admin-alert', 'Could not connect to server.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Login as Admin';
+  }
+};
 
   // Enter key support
   document.addEventListener('keydown', (e) => {
